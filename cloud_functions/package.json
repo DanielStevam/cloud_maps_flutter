@@ -1,0 +1,16 @@
+{
+  "name": "cloud-functions",
+  "version": "1.0.0",
+  "description": "Cloud Function para retornar locais próximos",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.1.0"
+  },
+  "scripts": {
+    "start": "functions-framework --target=getNearbyLocations"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -90,11 +90,11 @@ class _MapPageState extends State<MapPage> {
 
       if (_lastRequestLocation == null ||
           Geolocator.distanceBetween(
-            _lastRequestLocation!.latitude,
-            _lastRequestLocation!.longitude,
-            newLocation.latitude,
-            newLocation.longitude,
-          ) >=
+                _lastRequestLocation!.latitude,
+                _lastRequestLocation!.longitude,
+                newLocation.latitude,
+                newLocation.longitude,
+              ) >=
               100) {
         _lastRequestLocation = newLocation;
         _makeRequest(newLocation);
@@ -106,8 +106,7 @@ class _MapPageState extends State<MapPage> {
     final lat = location.latitude;
     final long = location.longitude;
 
-    // Construção da URL
-    final url = 'https://southamerica-east1-dev-distr.cloudfunctions.net/gps-puc/getNearbyPucMinas?lat=${location.latitude}&long=${location.longitude}'; // Você precisa criar uma api para a gente
+    final url = 'http://localhost:3000/getNearbyPucMinas?lat=$lat&long=$long';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -116,18 +115,27 @@ class _MapPageState extends State<MapPage> {
         final data = jsonDecode(response.body);
         if (data != null && data is List && data.isNotEmpty) {
           final unidade = data[0]['name'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Bem-vindo à $unidade'),
-              duration: const Duration(seconds: 5),
-            ),
-          );
+          if (unidade != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Bem-vindo à PUC Minas unidade $unidade'),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          } else {
+            throw Exception('Nome da unidade não encontrado.');
+          }
+        } else {
+          throw Exception('Nenhuma unidade encontrada.');
         }
       } else {
         throw Exception('Erro ao fazer a requisição: ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('Erro na requisição: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: ${e.toString()}')),
+      );
     }
   }
 
@@ -139,37 +147,38 @@ class _MapPageState extends State<MapPage> {
       ),
       body: _isLoading
           ? const Center(
-        child: CircularProgressIndicator(),
-      )
+              child: CircularProgressIndicator(),
+            )
           : FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: _currentLocation ?? const LatLng(0, 0), // Usando o center corretamente
-          initialZoom: 16.0,
-        ),
-        children: [
-          TileLayer(
-            urlTemplate:
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            subdomains: const ['a', 'b', 'c'],
-          ),
-          if (_currentLocation != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _currentLocation!,
-                  width: 36.0,
-                  height: 36.0,
-                  child: const Icon(
-                    Icons.location_pin,
-                    color: Colors.red,
-                    size: 36.0,
-                  ),
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _currentLocation ??
+                    const LatLng(0, 0), // Usando o center corretamente
+                initialZoom: 16.0,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  subdomains: const ['a', 'b', 'c'],
                 ),
+                if (_currentLocation != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _currentLocation!,
+                        width: 36.0,
+                        height: 36.0,
+                        child: const Icon(
+                          Icons.location_pin,
+                          color: Colors.red,
+                          size: 36.0,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
